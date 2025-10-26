@@ -26,7 +26,7 @@ knowledge0 = And(
 # A says "We are both knaves."
 # B says nothing.
 knowledge1 = And(
-    # Regra estrutural para A: knight OU knave (mutuamente exclusivos)
+     # Regra estrutural para A: knight OU knave (mutuamente exclusivos)
     Or(AKnight, AKnave),
     Not(And(AKnight, AKnave)),
 
@@ -44,7 +44,7 @@ knowledge1 = And(
 # A says "We are the same kind."
 # B says "We are of different kinds."
 knowledge2 = And(
-    # Regras estruturais: cada personagem é knight OU knave (mutuamente exclusivos)
+     # Regras estruturais: cada personagem é knight OU knave (mutuamente exclusivos)
     Or(AKnight, AKnave),
     Not(And(AKnight, AKnave)),
     Or(BKnight, BKnave),
@@ -86,18 +86,64 @@ knowledge3 = And(
     # Se B é knight (fala verdade), então A realmente disse isso, logo A é knave
     # Se B é knave (mente), então A NÃO disse isso, logo A é knight
     Biconditional(BKnight, AKnave),
-
+    
     # B afirma: "C is a knave"
     # Se B é knight (verdade), então C é knave
     # Se B é knave (mentira), então C é knight
     Biconditional(BKnight, CKnave),
-
+    
     # C afirma: "A is a knight"
     # Se C é knight (verdade), então A é knight
     # Se C é knave (mentira), então A é knave
     Biconditional(CKnight, AKnight)
 
 )
+
+def puzzle_statistics(knowledge, symbols):
+    """
+    Calcula estatísticas sobre a solução do puzzle.
+    Retorna um dicionário com informações úteis.
+    """
+    stats = {
+        "total_characters": 0,
+        "knights": 0,
+        "knaves": 0,
+        "solved_characters": []
+    }
+    
+    characters_found = set()  # Para evitar contar a mesma personagem duas vezes
+    
+    for symbol in symbols:
+        # Verifica se o símbolo está no puzzle atual
+        if model_check(knowledge, symbol):
+            symbol_str = str(symbol)
+            character = symbol_str.split()[0]  # Extrai 'A', 'B', ou 'C'
+            
+            if "Knight" in symbol_str:
+                stats["knights"] += 1
+                stats["solved_characters"].append(f"{character}: Knight")
+                characters_found.add(character)
+            elif "Knave" in symbol_str:
+                stats["knaves"] += 1
+                stats["solved_characters"].append(f"{character}: Knave")
+                characters_found.add(character)
+    
+    stats["total_characters"] = len(characters_found)
+    
+    return stats
+
+
+def print_statistics(puzzle_name, stats):
+    """
+    Imprime as estatísticas de forma formatada.
+    """
+    print(f"\n  📊 Statistics for {puzzle_name}:")
+    print(f"     Total characters: {stats['total_characters']}")
+    print(f"     Knights: {stats['knights']}")
+    print(f"     Knaves: {stats['knaves']}")
+    if stats['knights'] > 0 and stats['knaves'] > 0:
+        ratio = stats['knights'] / stats['knaves']
+        print(f"     Knight/Knave ratio: {ratio:.2f}")
 
 
 def main():
@@ -108,15 +154,25 @@ def main():
         ("Puzzle 2", knowledge2),
         ("Puzzle 3", knowledge3)
     ]
+    
+    print("=" * 50)
+    print("KNIGHTS AND KNAVES - PUZZLE SOLVER")
+    print("=" * 50)
+    
     for puzzle, knowledge in puzzles:
-        print(puzzle)
+        print(f"\n{puzzle}")
         if len(knowledge.conjuncts) == 0:
             print("    Not yet implemented.")
         else:
             for symbol in symbols:
                 if model_check(knowledge, symbol):
                     print(f"    {symbol}")
-
+            
+            # Calcular e mostrar estatísticas
+            stats = puzzle_statistics(knowledge, symbols)
+            print_statistics(puzzle, stats)
+    
+    print("\n" + "=" * 50)
 
 if __name__ == "__main__":
     main()
