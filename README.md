@@ -3,132 +3,233 @@
 ## Introdução
 Este projeto implementa um sistema de resolução automática de puzzles lógicos "Knights and Knaves" usando lógica proposicional e model checking. 
 
-Os puzzles baseiam-se numa premissa simples: cada personagem é um cavaleiro (que sempre diz a verdade) ou um mentiroso (que sempre mente). O objetivo é determinar, através das declarações das personagens, quem é cavaleiro e quem é mentiroso.
+Os puzzles baseiam-se numa premissa simples: cada personagem é um cavaleiro (knight) que sempre diz a verdade, ou um mentiroso (knave) que sempre mente. O objetivo é determinar, através das declarações das personagens, quem é cavaleiro e quem é mentiroso.
 
 ## Descrição do Projeto
 
-O projeto resolve 4 puzzles de complexidade crescente:
+O projeto resolve 4 puzzles de complexidade crescente através de bases de conhecimento em lógica proposicional:
 
-### Puzzle 0 - Uma Personagem
+### Puzzle 0 - Declaração Auto-Contraditória
 - **Personagens**: A
-- **Declaração**: A diz "Sou cavaleiro e mentiroso"
+- **Declaração**: A diz "Sou simultaneamente cavaleiro e mentiroso"
+- **Lógica implementada**: 
+  - Restrições estruturais: A é OU cavaleiro OU mentiroso (mutuamente exclusivos)
+  - Bicondicional que liga o tipo de A à veracidade da sua afirmação
 - **Solução**: A é mentiroso (pois ninguém pode ser ambos)
 
 ### Puzzle 1 - Declaração sobre Ambos
 - **Personagens**: A e B
-- **Declaração**: A diz "Somos ambos mentirosos"
-- **Solução**: A contradiz-se (cavaleiro não diria isso), logo A é mentiroso e B é cavaleiro
+- **Declaração**: A diz "Somos ambos mentirosos", B não diz nada
+- **Lógica implementada**: 
+  - Restrições estruturais para ambas as personagens
+  - Se A fosse cavaleiro, a afirmação seria verdadeira (mas isso criaria contradição)
+  - Se A é mentiroso, a afirmação é falsa (logo pelo menos um não é mentiroso)
+- **Solução**: A é mentiroso, B é cavaleiro
 
 ### Puzzle 2 - Declarações Conflituantes
 - **Personagens**: A e B
 - **Declarações**: 
   - A diz "Somos do mesmo tipo"
   - B diz "Somos de tipos diferentes"
-- **Solução**: As declarações são opostas, revelando quem mente
+- **Lógica implementada**: 
+  - Duas bicondicionais opostas que forçam uma contradição
+  - Se A fala verdade, são iguais; se B fala verdade, são diferentes
+  - Apenas uma pode ser verdadeira
+- **Solução**: A é mentiroso, B é cavaleiro (as declarações são logicamente opostas)
 
-### Puzzle 3 - Três Personagens com Interdependência
+### Puzzle 3 - Três Personagens com Declarações Indiretas
 - **Personagens**: A, B e C
 - **Declarações**:
+  - A diz "Sou cavaleiro" OU "Sou mentiroso" (não sabemos qual)
   - B diz que A disse "Sou mentiroso"
   - B diz "C é mentiroso"
   - C diz "A é cavaleiro"
-- **Solução**: Análise complexa de declarações indiretas
+- **Lógica implementada**: 
+  - A nunca diria "Sou mentiroso" (paradoxo lógico)
+  - Logo B está a mentir sobre o que A disse
+  - Cadeia de implicações através das três personagens
+- **Solução**: A é cavaleiro, B é mentiroso, C é cavaleiro
 
 ## Estrutura do Código
 
-Cada knowledge base (`knowledge0`, `knowledge1`, `knowledge2`, `knowledge3`) codifica dois tipos de informação:
+### Componentes Principais
 
-1. **Restrições Estruturais**: Cada personagem é exclusivamente cavaleiro OU mentiroso
-```python
-   Or(AKnight, AKnave),
-   Not(And(AKnight, AKnave))
-```
+Cada knowledge base contém dois tipos de informação:
 
-2. **Implicações Lógicas**: As declarações são verdadeiras se ditas por cavaleiros, falsas se ditas por mentirosos
-```python
-   Implication(AKnight, declaracao),
-   Implication(AKnave, Not(declaracao))
-```
-
-## Ferramentas de IA Usadas
-
-### Claude (Anthropic)
-Utilizado para:
-- Compreensão da lógica proposicional e sintaxe das expressões lógicas
-- Estruturação das knowledge bases para cada puzzle
-- Debugging de implicações lógicas complexas (especialmente Puzzle 3)
-- Organização do workflow Git com branches e conventional commits
-- Criação desta documentação
-
-### GitHub Copilot
-Utilizado para:
-- Sugestões de sintaxe Python durante a escrita do código
-- Autocompletar expressões lógicas repetitivas
-- Acelerar a escrita de padrões similares entre puzzles
-
-## Exemplos de Prompts e Outputs
-
-### Prompt 1: Estrutura Base
-**Input ao Claude**: 
-> "Como representar em lógica proposicional que uma personagem é exclusivamente cavaleiro OU mentiroso?"
-
-**Output da IA**: 
+#### 1. Restrições Estruturais
+Define que cada personagem é exclusivamente cavaleiro OU mentiroso:
 ```python
 Or(AKnight, AKnave),      # A é cavaleiro OU mentiroso
 Not(And(AKnight, AKnave)) # Mas NÃO ambos simultaneamente
 ```
-Esta representação usa XOR (ou exclusivo) através da combinação de OR e NOT(AND).
 
-### Prompt 2: Implicações de Declarações
+#### 2. Bicondicionais Lógicas
+Liga o tipo da personagem à veracidade das suas declarações:
+```python
+# Se A é cavaleiro ↔ a declaração é verdadeira
+# Se A é mentiroso ↔ a declaração é falsa
+Biconditional(AKnight, declaracao)
+```
+
+### Exemplo Completo - Puzzle 1
+```python
+knowledge1 = And(
+    # Restrições estruturais
+    Or(AKnight, AKnave),
+    Not(And(AKnight, AKnave)),
+    Or(BKnight, BKnave),
+    Not(And(BKnight, BKnave)),
+    
+    # A afirma: "Somos ambos mentirosos"
+    # Bicondicional: A é knight ↔ (A é knave E B é knave)
+    Biconditional(AKnight, And(AKnave, BKnave))
+)
+```
+
+**Análise**: 
+- Se A fosse knight: `True ↔ (False AND ?)` = contradição!
+- Logo A é knave: `False ↔ (True AND ?)` = B tem de ser knight
+
+## Ferramentas de IA Usadas
+
+### Claude (Anthropic) - Sonnet 4.5
+**Utilização principal**: Assistente de desenvolvimento e aprendizagem
+
+**Tarefas realizadas**:
+- Explicação detalhada da lógica proposicional e operadores (And, Or, Not, Implication, Biconditional)
+- Clarificação da diferença entre Implication e Biconditional no contexto deste problema
+- Análise de puzzles complexos (especialmente Puzzle 3 com declarações indiretas)
+- Estruturação do workflow Git com feature branches
+- Orientação sobre conventional commits em português
+- Revisão e correção de erros lógicos no código
+- Criação desta documentação
+
+### GitHub Copilot
+**Utilização secundária**: Autocompletar e sugestões de código
+
+**Tarefas realizadas**:
+- Sugestões de sintaxe Python durante escrita
+- Autocompletar padrões repetitivos (restrições estruturais)
+- Acelerar escrita de expressões lógicas similares
+
+## Exemplos de Prompts e Outputs de IA
+
+### Prompt 1: Compreender Operadores Lógicos
 **Input ao Claude**: 
-> "Se A diz 'Somos ambos mentirosos', como codifico isto considerando que A pode ser cavaleiro ou mentiroso?"
+> "Qual a diferença entre usar Implication e Biconditional para representar que um knight diz a verdade?"
 
 **Output da IA**: 
-- Se A é cavaleiro (diz verdade): `Implication(AKnight, And(AKnave, BKnave))`
-  - A declaração "somos ambos mentirosos" seria verdadeira
-- Se A é mentiroso (diz mentira): `Implication(AKnave, Not(And(AKnave, BKnave)))`
-  - A declaração seria falsa (pelo menos um não é mentiroso)
+```
+Implication (A → B): "Se A então B"
+- Implication(AKnight, declaracao): Se A é knight, então declaracao é verdadeira
+- Problema: não diz nada sobre quando A é knave
 
-### Prompt 3: Paradoxos Lógicos
+Biconditional (A ↔ B): "A se e somente se B"
+- Biconditional(AKnight, declaracao): A é knight ↔ declaracao é verdadeira
+- Vantagem: captura ambos os casos:
+  * Se A é knight → declaracao é verdadeira
+  * Se A é knave → declaracao é falsa
+```
+
+**Impacto**: Percebi que Biconditional é mais conciso e captura toda a lógica num só operador.
+
+---
+
+### Prompt 2: Resolver Puzzle 1
 **Input ao Claude**: 
-> "No Puzzle 3, porque é que 'A nunca diria que é mentiroso'?"
+> "No Puzzle 1, A diz 'Somos ambos mentirosos'. Como represento isto?"
 
-**Output da IA**: 
-Esta é uma declaração paradoxal:
-- Se A fosse cavaleiro e dissesse "Sou mentiroso", estaria a mentir → Impossível (cavaleiros não mentem)
-- Se A fosse mentiroso e dissesse "Sou mentiroso", estaria a dizer a verdade → Impossível (mentirosos não dizem verdades)
-- Logo, nenhuma personagem (cavaleiro ou mentiroso) pode fazer esta declaração consistentemente
+**Output da IA**:
+```python
+# A afirma: "We are both knaves"
+# Usa Biconditional para ligar o tipo de A à veracidade da afirmação
+Biconditional(AKnight, And(AKnave, BKnave))
+
+# Análise:
+# Se AKnight for True: True ↔ (False AND BKnave)
+# Isto é impossível! Logo A não pode ser knight.
+
+# Se AKnight for False (A é knave): False ↔ (True AND BKnave)  
+# Para isso ser consistente: BKnave tem de ser False (B é knight)
+```
+
+**Impacto**: Compreendi como o model checker resolve contradições automaticamente.
+
+---
+
+### Prompt 3: Puzzle 3 - Paradoxo Lógico
+**Input ao Claude**: 
+> "No Puzzle 3, porque é que nenhuma personagem diria 'Sou mentiroso'?"
+
+**Output da IA**:
+```
+Esta é uma declaração paradoxal conhecida como "Paradoxo do Mentiroso":
+
+Caso 1: A é knight (diz verdade)
+- Se A dissesse "Sou mentiroso", estaria a afirmar algo falso
+- Mas knights não mentem → Contradição!
+
+Caso 2: A é knave (mente)
+- Se A dissesse "Sou mentiroso", estaria a dizer a verdade
+- Mas knaves não dizem verdades → Contradição!
+
+Conclusão: NENHUMA personagem (knight ou knave) pode fazer 
+esta declaração de forma logicamente consistente.
+
+Logo, no Puzzle 3, quando B diz que "A disse 'Sou mentiroso'", 
+B está necessariamente a mentir (é um knave).
+```
+
+**Impacto**: Esta explicação foi crucial para resolver o Puzzle 3 corretamente.
+
+---
 
 ### Prompt 4: Organização Git
 **Input ao Claude**: 
-> "Como organizar os commits deste projeto usando conventional commits e feature branches?"
+> "Como organizar este projeto com Git usando conventional commits e feature branches?"
 
-**Output da IA**: 
-Sugeriu a estrutura:
-- `feature/puzzle-0`, `feature/puzzle-1`, etc. para cada puzzle
-- Conventional commits: `feat(puzzle0):`, `docs:`, `test:`, etc.
-- Workflow: criar branch → commits → merge na main → push
+**Output da IA**:
+```
+Estrutura recomendada:
+
+1. Branches:
+   - main (branch principal)
+   - feature/puzzle-0 (apenas Puzzle 0)
+   - feature/puzzle-1 (apenas Puzzle 1)
+   - feature/puzzle-2 (apenas Puzzle 2)
+   - feature/puzzle-3 (apenas Puzzle 3)
+   - feature/documentacao (README)
+
+2. Conventional Commits em PT-PT:
+   - feat(puzzle0): implementar lógica...
+   - fix(puzzle2): corrigir implicação...
+   - docs: adicionar README...
+   - test: validar com check50...
+   - style: aplicar formatação...
+
+3. Workflow:
+   git checkout -b feature/puzzle-X
+   # desenvolver
+   git commit -m "feat(puzzleX): ..."
+   git checkout main
+   git merge feature/puzzle-X
+   git push
+```
+
+**Impacto**: Consegui organizar o projeto de forma profissional e cumprir os requisitos de avaliação.
 
 ## Como Executar
 
-### Executar o programa:
+### Pré-requisitos
+- Python 3.12
+- Ficheiros `logic.py` e `puzzle.py` na mesma pasta
+
+### Executar o programa
 ```bash
 python puzzle.py
 ```
 
-### Executar testes:
-```bash
-check50 ai50/projects/2024/x/knights
-```
-
-### Verificar estilo:
-```bash
-style50 puzzle.py
-```
-
-## Resultados Esperados
-
-Ao executar `python puzzle.py`, deverá ver:
+### Resultados Esperados
 ```
 Puzzle 0
     A is a Knave
@@ -144,14 +245,60 @@ Puzzle 3
     C is a Knight
 ```
 
+## Testes e Validação
+
+### Verificar correção do código
+```bash
+check50 ai50/projects/2024/x/knights
+```
+
+### Verificar estilo do código
+```bash
+style50 puzzle.py
+```
+
+### Submeter projeto
+```bash
+submit50 ai50/projects/2024/x/knights
+```
+
+## Estrutura do Repositório
+```
+knights/
+├── logic.py          # Classes para lógica proposicional (fornecido)
+├── puzzle.py         # Implementação das knowledge bases (desenvolvido)
+├── README.md         # Esta documentação
+└── .gitignore        # Ficheiros ignorados pelo Git
+```
+
 ## Tecnologias Utilizadas
-- Python 3.12
-- Lógica Proposicional
-- Model Checking Algorithm
-- Git & GitHub para controlo de versões
+- **Python 3.12**: Linguagem de programação
+- **Lógica Proposicional**: Representação do conhecimento
+- **Model Checking**: Algoritmo de inferência lógica
+- **Git & GitHub**: Controlo de versões
+
+## Aprendizagens
+
+### Conceitos Técnicos
+1. **Lógica Proposicional**: Como representar conhecimento em símbolos e conectivos lógicos
+2. **Model Checking**: Como um algoritmo pode explorar todos os modelos possíveis para encontrar soluções
+3. **Bicondicionais**: Representação concisa de "se e somente se" em lógica
+4. **Paradoxos Lógicos**: Como declarações auto-referenciadas podem ser inconsistentes
+
+### Boas Práticas
+1. **Git Workflow**: Uso de feature branches e conventional commits
+2. **Documentação**: Importância de documentar decisões e uso de ferramentas
+3. **Decomposição de Problemas**: Resolver puzzles incrementalmente (0→1→2→3)
 
 ## Autor
-Sofia Martins - CS50 AI 2024/2025
+Sofia Martins - Universidade do Algarve  
+CS50's Introduction to Artificial Intelligence with Python - 2024/2025
+
+## Referências
+- Smullyan, Raymond (1978). "What is the name of this book?"
+- CS50 AI Course Materials
+- Documentação Python 3.12
+- Claude AI Documentation (Anthropic)
 
 ## Licença
-Este projeto foi desenvolvido como parte do curso CS50's Introduction to Artificial Intelligence with Python.
+Este projeto foi desenvolvido como trabalho académico para o curso CS50 AI.
