@@ -26,7 +26,7 @@ knowledge0 = And(
 # A says "We are both knaves."
 # B says nothing.
 knowledge1 = And(
-     # Regra estrutural para A: knight OU knave (mutuamente exclusivos)
+    # Regra estrutural para A: knight OU knave (mutuamente exclusivos)
     Or(AKnight, AKnave),
     Not(And(AKnight, AKnave)),
 
@@ -44,7 +44,7 @@ knowledge1 = And(
 # A says "We are the same kind."
 # B says "We are of different kinds."
 knowledge2 = And(
-     # Regras estruturais: cada personagem é knight OU knave (mutuamente exclusivos)
+    # Regras estruturais: cada personagem é knight OU knave (mutuamente exclusivos)
     Or(AKnight, AKnave),
     Not(And(AKnight, AKnave)),
     Or(BKnight, BKnave),
@@ -68,7 +68,7 @@ knowledge2 = And(
 # B says "C is a knave."
 # C says "A is a knight."
 knowledge3 = And(
-     # Regras estruturais: cada personagem é knight OU knave (mutuamente exclusivos)
+    # Regras estruturais: cada personagem é knight OU knave (mutuamente exclusivos)
     Or(AKnight, AKnave),
     Not(And(AKnight, AKnave)),
     Or(BKnight, BKnave),
@@ -86,12 +86,12 @@ knowledge3 = And(
     # Se B é knight (fala verdade), então A realmente disse isso, logo A é knave
     # Se B é knave (mente), então A NÃO disse isso, logo A é knight
     Biconditional(BKnight, AKnave),
-    
+
     # B afirma: "C is a knave"
     # Se B é knight (verdade), então C é knave
     # Se B é knave (mentira), então C é knight
     Biconditional(BKnight, CKnave),
-    
+
     # C afirma: "A is a knight"
     # Se C é knight (verdade), então A é knight
     # Se C é knave (mentira), então A é knave
