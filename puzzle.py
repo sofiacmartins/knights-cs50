@@ -44,7 +44,22 @@ knowledge1 = And(
 # A says "We are the same kind."
 # B says "We are of different kinds."
 knowledge2 = And(
-    # TODO
+     # Regras estruturais: cada personagem é knight OU knave (mutuamente exclusivos)
+    Or(AKnight, AKnave),
+    Not(And(AKnight, AKnave)),
+    Or(BKnight, BKnave),
+    Not(And(BKnight, BKnave)),
+
+    # A afirma: "We are the same kind"
+    # Se A é knight (verdade), então A e B são do mesmo tipo (ambos knights ou ambos knaves)
+    # Se A é knave (mentira), então NÃO são do mesmo tipo
+    Biconditional(AKnight, Or(And(AKnight, BKnight), And(AKnave, BKnave))),
+
+    # B afirma: "We are of different kinds"
+    # Se B é knight (verdade), então A e B são de tipos diferentes
+    # Se B é knave (mentira), então NÃO são de tipos diferentes
+    Biconditional(BKnight, Or(And(AKnight, BKnave), And(AKnave, BKnight)))
+
 )
 
 # Puzzle 3
