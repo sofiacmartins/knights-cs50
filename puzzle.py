@@ -68,7 +68,35 @@ knowledge2 = And(
 # B says "C is a knave."
 # C says "A is a knight."
 knowledge3 = And(
-    # TODO
+     # Regras estruturais: cada personagem é knight OU knave (mutuamente exclusivos)
+    Or(AKnight, AKnave),
+    Not(And(AKnight, AKnave)),
+    Or(BKnight, BKnave),
+    Not(And(BKnight, BKnave)),
+    Or(CKnight, CKnave),
+    Not(And(CKnight, CKnave)),
+
+    # O que A disse: pode ser "I am a knight" ou "I am a knave"
+    # Se A é knight, a frase dele (seja qual for) é verdadeira
+    # Se A é knave, a frase dele (seja qual for) é falsa
+    # A só pode ter dito "I am a Knave" (porque seria mentira se for knave, e um knight nunca diria isso)
+    Biconditional(AKnight, Or(AKnight, AKnave)),
+
+    # B afirma: "A said 'I am a knave'"
+    # Se B é knight (fala verdade), então A realmente disse isso, logo A é knave
+    # Se B é knave (mente), então A NÃO disse isso, logo A é knight
+    Biconditional(BKnight, AKnave),
+    
+    # B afirma: "C is a knave"
+    # Se B é knight (verdade), então C é knave
+    # Se B é knave (mentira), então C é knight
+    Biconditional(BKnight, CKnave),
+    
+    # C afirma: "A is a knight"
+    # Se C é knight (verdade), então A é knight
+    # Se C é knave (mentira), então A é knave
+    Biconditional(CKnight, AKnight)
+
 )
 
 
