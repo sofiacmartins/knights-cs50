@@ -290,6 +290,26 @@ knights/
 2. **Documentação**: Importância de documentar decisões e uso de ferramentas
 3. **Decomposição de Problemas**: Resolver puzzles incrementalmente (0→1→2→3)
 
+## Features Adicionais
+
+### 📊 Estatísticas de Puzzles
+O programa inclui estatísticas automáticas para cada puzzle resolvido:
+- **Total de personagens** no puzzle
+- **Contagem separada** de knights e knaves
+- **Ratio knight/knave** para análise comparativa
+- **Interface visual melhorada** com headers e emojis
+
+Exemplo de output:
+```
+  📊 Statistics for Puzzle 3:
+     Total characters: 3
+     Knights: 2
+     Knaves: 1
+     Knight/Knave ratio: 2.00
+```
+
+Para documentação detalhada desta feature, consulta [FEATURE_statistics.md](FEATURE_statistics.md).
+
 ## Autor
 Sofia Martins - Universidade do Algarve  
 CS50's Introduction to Artificial Intelligence with Python - 2024/2025
