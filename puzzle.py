@@ -26,7 +26,18 @@ knowledge0 = And(
 # A says "We are both knaves."
 # B says nothing.
 knowledge1 = And(
-    # TODO
+     # Regra estrutural para A: knight OU knave (mutuamente exclusivos)
+    Or(AKnight, AKnave),
+    Not(And(AKnight, AKnave)),
+
+    # Regra estrutural para B: knight OU knave (mutuamente exclusivos)
+    Or(BKnight, BKnave),
+    Not(And(BKnight, BKnave)),
+
+    # A afirma: "We are both knaves"
+    # Se A é knight (fala verdade), então ambos são knaves
+    # Se A é knave (mente), então a afirmação de que ambos são knaves é falsa
+    Biconditional(AKnight, And(AKnave, BKnave))
 )
 
 # Puzzle 2
