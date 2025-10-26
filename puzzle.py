@@ -12,7 +12,14 @@ CKnave = Symbol("C is a Knave")
 # Puzzle 0
 # A says "I am both a knight and a knave."
 knowledge0 = And(
-    # TODO
+    # Regra estrutural: A é knight OU knave (mutuamente exclusivos)
+    Or(AKnight, AKnave),
+    Not(And(AKnight, AKnave)),
+
+    # A afirma: "I am both a knight and a knave"
+    # Se A é knight (diz verdade), então a afirmação é verdadeira
+    # S e A é knave (mente), então a afirmação é falsa
+    Biconditional(AKnight, And(AKnight, AKnave))
 )
 
 # Puzzle 1
